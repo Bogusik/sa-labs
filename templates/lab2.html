@@ -1,23 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lab 2</title>
-</head>
-<body>
-  <p>Server counter: <span id="api-text"></span></p>
-  <script>
-    function fetchData () {
-        fetch('/api/lab2').then((response) => {
-          return response.json();
-        }).then((data) => {
-          document.querySelector('#api-text').innerHTML = data.state
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lab 2</title>
+  </head>
+  <body>
+    <form onsubmit="fetchData" class="form">
+      <p>Polynom type:</p>
+      <div>
+        <input type="radio" id="chebyshev" name="poly_type" value="chebyshev" />
+        <label for="chebyshev">chebyshev</label>
+
+        <input
+          type="radio"
+          id="chebyshev_2_type"
+          name="poly_type"
+          value="chebyshev_2_type"
+        />
+        <label for="chebyshev_2_type">chebyshev_2_type</label>
+
+        <input type="radio" id="hermite" name="poly_type" value="hermite" />
+        <label for="hermite">hermite</label>
+
+        <input type="radio" id="legandre" name="poly_type" value="legandre" />
+        <label for="legandre">legandre</label>
+
+        <input type="radio" id="laguerre" name="poly_type" value="laguerre" />
+        <label for="laguerre">laguerre</label>
+      </div>
+      <label for="laguerre">Splitted lambda</label>
+      <input type="radio" />
+
+      <p>Degrees:</p>
+      <div>
+        <input
+          id="x1_degree"
+          name="x1_degree"
+          min="0"
+          max="100"
+          type="number"
+        />
+        <label for="x1_degree">X1</label>
+        <input
+          id="x2_degree"
+          name="x2_degree"
+          min="0"
+          max="100"
+          type="number"
+        />
+        <label for="x2_degree">X2</label>
+        <input
+          id="x3_degree"
+          name="x3_degree"
+          min="0"
+          max="100"
+          type="number"
+        />
+        <label for="x3_degree">X3</label>
+      </div>
+      <p>Dimensions:</p>
+      <div>
+        <input
+          id="x1_dimension"
+          name="x1_dimension"
+          min="0"
+          max="100"
+          type="number"
+        />
+        <label for="x1_dimension">X1</label>
+        <input
+          id="x2_dimension"
+          name="x2_dimension"
+          min="0"
+          max="100"
+          type="number"
+        />
+        <label for="x2_dimension">X2</label>
+        <input
+          id="x3_dimension"
+          name="x3_dimension"
+          min="0"
+          max="100"
+          type="number"
+        />
+        <label for="x3_dimension">X3</label>
+      </div>
+      <p>Data:</p>
+      <div>
+        <input id="file" name="file" type="file" />
+      </div>
+      <div>
+        <button class="submit_button" type="submit">Submit</button>
+      </div>
+    </form>
+    <div id="loading" style="display: none">Loading...</div>
+    <div id="responce" style="display: none">
+      <div id="graphics"></div>
+      <div id="file">
+        <a id="results" style="display: none" download="results.txt"
+          >download results</a
+        >
+      </div>
+    </div>
+
+    <script>
+      const form = document.querySelector("form");
+
+      form.addEventListener("submit", (e) => fetchData(e));
+
+      function setLoader() {
+        const loader = document.getElementById("loading");
+        const actualDisplay = getComputedStyle(loader).display;
+        if (actualDisplay == "none") {
+          loader.style.display = "block";
+        }
+        const responce = document.getElementById("responce");
+        const actualResponceDisplay = getComputedStyle(loader).display;
+        if (actualResponceDisplay == "block") {
+          responce.style.display = "none";
+        }
+      }
+      function unsetLoader() {
+        const loader = document.getElementById("loading");
+        const actualDisplay = getComputedStyle(loader).display;
+        if (actualDisplay == "block") {
+          loader.style.display = "none";
+        }
+        const responce = document.getElementById("responce");
+        const actualResponceDisplay = getComputedStyle(loader).display;
+        if (actualResponceDisplay == "none") {
+          responce.style.display = "block";
+        }
+      }
+      function setDownloadedFile(data) {
+        const download = document.getElementById("results");
+        const actualDisplay = getComputedStyle(download).display;
+        if (actualDisplay == "none") {
+          download.style.display = "block";
+        }
+        console.log(data);
+        const res = document.getElementById("results");
+
+        const blob1 = new File([atob(data)], { type: "application/text" });
+        res.href = URL.createObjectURL(blob1);
+      }
+
+      function fetchData(e) {
+        e.preventDefault();
+        setLoader();
+        const degrees = [];
+        degrees.push(parseInt(document.getElementById("x1_degree").value));
+        degrees.push(parseInt(document.getElementById("x2_degree").value));
+        degrees.push(parseInt(document.getElementById("x3_degree").value));
+
+        const dimensions = [];
+        dimensions.push(
+          parseInt(document.getElementById("x1_dimension").value)
+        );
+        dimensions.push(
+          parseInt(document.getElementById("x2_dimension").value)
+        );
+        dimensions.push(
+          parseInt(document.getElementById("x3_dimension").value)
+        );
+
+        const poly_type = document.querySelector(
+          'input[name="poly_type"]:checked'
+        ).value;
+        const file = document.getElementById("file");
+        const body = new FormData();
+        body.append("poly_type", poly_type);
+        body.append("degrees", degrees);
+        body.append("dimensions", dimensions);
+        body.append("file", file.files[0]);
+        console.log(degrees);
+        fetch("/api/lab2", {
+          method: "POST",
+          body: body,
         })
-    }
-    fetchData()
-    setInterval(fetchData, 1000)
-  </script>
-</body>
+          .then((response) => {
+            return response.json();
+          })
+          .then((data) => {
+            console.log(data);
+            unsetLoader();
+            setDownloadedFile(data.result.file_results);
+            setGraphics(data.result.graphics);
+          });
+      }
+
+      function setGraphics(graphics) {
+        const graphicsDOM = document.getElementById("graphics");
+        graphicsDOM.innerHTML = "";
+        graphics.forEach((el) => {
+          var image = new Image();
+
+          image.src = "data:image/png;base64," + el;
+          graphicsDOM.appendChild(image);
+        });
+      }
+    </script>
+  </body>
 </html>

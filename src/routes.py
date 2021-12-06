@@ -1,9 +1,10 @@
-from typing import Dict
-from fastapi import APIRouter
+from typing import Dict, List
+from fastapi import APIRouter, FastAPI, File, UploadFile
+from fastapi.param_functions import Form, Query
 from src.utils import render
-
+from src.model.main import get_images, get_results, plot_graphisc
 router: APIRouter = APIRouter()
-state: int = 0
+ 
 
 
 @router.get('/lab2')
@@ -11,8 +12,10 @@ async def lab2() -> Dict[str, str]:
     return render('templates/lab2.html')
 
 
-@router.get('/api/lab2')
-async def api_lab2() -> Dict[str, str]:
-    global state
-    state += 1
-    return {'state': state}
+
+
+
+@router.post('/api/lab2')
+async def api_lab2(poly_type:str=Form(...),degrees:str = Form(...), file:UploadFile= File(...),dimensions:str = Form(...)):
+    result = get_results(file,degrees,poly_type,dimensions)
+    return {'result':result}
